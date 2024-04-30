@@ -71,4 +71,16 @@ export const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
         'Gets the coin system. It shows how much coin we can earn from different modules.',
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'submitAnonymousFeedback',
+      description: 'Submits anonymous feedback. Please prompt user to provide feedback data',
+      parameters: {
+        type: 'object',
+        properties: { feedback_data: { type: 'string' } },
+        required: ['feedback_data'],
+      },
+    },
+  },
 ];

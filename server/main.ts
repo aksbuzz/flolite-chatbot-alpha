@@ -1,77 +1,56 @@
 import cors from '@fastify/cors';
 import fastify from 'fastify';
 import OpenAI from 'openai';
-import { callExternalAPI } from './api';
-import { openai } from './lib/openai';
-import { tools } from './tools';
 import { Readable } from 'stream';
+import { callExternalAPI } from './api';
+import { chatCompletionRequest } from './lib/openai';
+import { tools } from './tools';
 
-function getContext(question: string): OpenAI.Chat.ChatCompletionMessageParam[] {
-  return [
-    { role: 'user', content: question },
-    {
-      role: 'system',
-      content: 'You are a `flolite` chatbot. ',
-    },
-  ];
-}
-
-async function callOpenAIWithTools(ctx: OpenAI.Chat.ChatCompletionMessageParam[]) {
-  const { choices } = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    messages: ctx,
-    tools: tools,
-    tool_choice: 'auto',
-  });
-
-  return choices[0];
-}
-
-async function summarizeWithOpenAI(context: OpenAI.Chat.ChatCompletionMessageParam[]) {
-  const summary = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    messages: context,
-  });
-
-  // TODO: add streaming
-  // for await (const chunk of summary) {
-  //   process.stdout.write(chunk.choices[0].delta.content || '');
-  // }
-
-  return summary.choices[0].message.content;
-}
+// Messages to keep track of user and assistant
+const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+  {
+    role: 'system',
+    content:
+      "Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.",
+  },
+];
 
 const server = fastify();
 server.register(cors, { origin: 'http://localhost:5173' });
 
+// ROUTES
 server.get('/ping', async () => 'pong\n');
 
 server.post<{ Body: { message: string } }>('/api/chat', async (request, reply) => {
-  const question = request.body.message;
+  // Get user query from request and append to messages array
+  const query = request.body.message;
+  messages.push({ role: 'user', content: query });
 
-  const context = getContext(question);
-  try {
-    const choice = await callOpenAIWithTools(context);
-    if (choice.finish_reason === 'tool_calls') {
-      console.log('Tool call');
-      const toolCall = choice.message.tool_calls![0];
-      const apiResponse = await callExternalAPI(toolCall);
+  // send user query to openai and append to messages array
+  let chatResponse = await chatCompletionRequest(messages, tools);
+  let assistantMsg = chatResponse.message;
+  messages.push(assistantMsg);
 
-      context.push(choice.message);
-      context.push({ role: 'tool', content: apiResponse, tool_call_id: toolCall.id });
-      const response = await summarizeWithOpenAI(context);
+  // check if assistant response is a tool call
+  if (
+    assistantMsg.content === null &&
+    assistantMsg.tool_calls &&
+    assistantMsg.role === 'assistant'
+  ) {
+    // call external API
+    const toolCall = assistantMsg.tool_calls![0];
+    const apiResponse = await callExternalAPI(toolCall);
+    messages.push({ role: 'tool', content: apiResponse, tool_call_id: toolCall.id });
 
-      reply.send({ data: response }).status(200);
-    } else {
-      console.log('No tool call');
-      reply.send({ data: "Sorry, I didn't understand that." }).status(200);
-    }
-  } catch (error) {
-    console.error(error);
-    reply.send({ data: 'There was an error. Please try again.' }).status(500);
+    // send tool response to openai
+    chatResponse = await chatCompletionRequest(messages, tools, 'none');
+    assistantMsg = chatResponse.message;
   }
+
+  reply.send({ data: assistantMsg.content }).status(200);
 });
 
+// TODO
 server.post('/', async (request, reply) => {
   const readableStream = new Readable();
   readableStream._read = () => {};

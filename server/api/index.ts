@@ -8,6 +8,7 @@ import {
 } from './dashboard/dashboard';
 import { getMyProfile } from './profile/profile';
 import { getCoinSystem, getLeaderboard } from './wallet/wallet';
+import { submitAnonymousFeedback } from './feedback/feedback';
 
 export async function callExternalAPI(
   toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall
@@ -40,6 +41,9 @@ export async function callExternalAPI(
       break;
     case 'getCoinSystem':
       result = await getCoinSystem();
+      break;
+    case 'submitAnonymousFeedback':
+      result = await submitAnonymousFeedback(parsedArgs);
       break;
     default:
       // TODO: replace

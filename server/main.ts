@@ -1,7 +1,6 @@
 import cors from '@fastify/cors';
 import fastify from 'fastify';
 import OpenAI from 'openai';
-import { Readable } from 'stream';
 import { callExternalAPI } from './api';
 import { chatCompletionRequest } from './lib/openai';
 import { tools } from './tools';
@@ -19,8 +18,7 @@ const server = fastify();
 server.register(cors, { origin: 'http://localhost:5173' });
 
 // ROUTES
-server.get('/ping', async () => 'pong\n');
-
+server.get<{}>('/ping', async () => 'pong\n');
 server.post<{ Body: { message: string } }>('/api/chat', async (request, reply) => {
   // Get user query from request and append to messages array
   const query = request.body.message;
@@ -48,29 +46,6 @@ server.post<{ Body: { message: string } }>('/api/chat', async (request, reply) =
   }
 
   reply.send({ data: assistantMsg.content }).status(200);
-});
-
-// TODO
-server.post('/', async (request, reply) => {
-  const readableStream = new Readable();
-  readableStream._read = () => {};
-
-  reply.header('Content-Type', 'application/json; charset=utf-8');
-  reply.send(readableStream);
-
-  // Simulate asynchronous processing of the request
-  setTimeout(() => {
-    // Push the desired data down the stream
-    readableStream.push(JSON.stringify({ message: 'Hello, world!' }));
-  }, 1000);
-
-  // Nothing else to do after 5 seconds so we close the stream
-  setTimeout(() => {
-    // Push the desired data down the stream
-    readableStream.push(null); // End the stream when the client closes the connection
-  }, 5000);
-
-  return reply;
 });
 
 server.listen({ port: 8000 }, (err, address) => {

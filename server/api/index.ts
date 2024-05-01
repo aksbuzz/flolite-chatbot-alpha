@@ -2,9 +2,8 @@ import OpenAI from 'openai';
 import {
   getAnnouncements,
   getCoinBalance,
-  getUpcomingBirthdays,
-  getUpcomingHolidays,
-  getUpcomingWorkAnniversaries,
+  getPendingTasks,
+  getUpcomingEvents
 } from './dashboard/dashboard';
 import { getMyProfile } from './profile/profile';
 import { getCoinSystem, getLeaderboard } from './wallet/wallet';
@@ -24,14 +23,11 @@ export async function callExternalAPI(
     case 'getAnnouncements':
       result = await getAnnouncements();
       break;
-    case 'getUpcomingHolidays':
-      result = await getUpcomingHolidays();
+    case 'getPendingTasks':
+      result = await getPendingTasks();
       break;
-    case 'getUpcomingBirthdays':
-      result = await getUpcomingBirthdays();
-      break;
-    case 'getUpcomingWorkAnniversaries':
-      result = await getUpcomingWorkAnniversaries();
+    case 'getUpcomingEvents':
+      result = await getUpcomingEvents();
       break;
     case 'getMyProfile':
       result = await getMyProfile();

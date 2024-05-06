@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 
-export const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+export const dashboardTools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
     type: 'function',
     function: {

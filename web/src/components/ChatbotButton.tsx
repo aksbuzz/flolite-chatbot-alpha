@@ -1,11 +1,21 @@
+import { useState } from 'react';
+import { useTimeout } from '../hooks';
+
 type ChatbotButtonProps = {
   onClick: () => void;
-}
+};
 
 export function ChatbotButton({ onClick }: ChatbotButtonProps) {
+  const [showChatButton, setShowChatButton] = useState(false);
+  useTimeout(() => {
+    setShowChatButton(true);
+  }, 1000);
+
   return (
     <button
-      className="fixed bottom-4 right-4 inline-flex items-center justify-center text-sm font-medium disabled:pointer-events-none disabled:opacity-50 border rounded-full w-16 h-16 bg-black hover:bg-gray-700 m-0 cursor-pointer border-gray-200 bg-none p-0 normal-case leading-5 hover:text-gray-900"
+      className={`fixed  transition-all ${
+        showChatButton ? 'bottom-4 ' : '-bottom-14'
+      } right-4 inline-flex items-center justify-center rounded-full w-14 h-14 bg-[#f36a40] hover:scale-105 m-0 cursor-pointer`}
       type="button"
       aria-haspopup="dialog"
       aria-expanded="false"

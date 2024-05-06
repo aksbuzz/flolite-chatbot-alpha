@@ -1,12 +1,20 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { sendMessage } from './api/send-message';
 import { ChatInput, ChatMessages, ChatbotButton } from './components';
 import { useDisclosure } from './hooks';
 import type { ChatMessage } from './types';
+import { isInViewport } from './util/dom';
+
+const defaultMessages: ChatMessage[] = [
+  { role: 'assistant', content: '👋Welcome to Flolite Assistant. How can I help you?' },
+];
 
 function App() {
+  const $messagesRef = useRef<HTMLDivElement>(null);
+  const $scrollRef = useRef<boolean>(true);
+
   const chatbot = useDisclosure();
-  const [messages, setMessages] = useState<Array<ChatMessage>>([]);
+  const [messages, setMessages] = useState<Array<ChatMessage>>(defaultMessages);
 
   const isSending = messages.some(m => m.role === 'assistant' && m.content === '');
 
@@ -16,6 +24,8 @@ function App() {
       { role: 'user', content: message },
       { role: 'assistant', content: '' },
     ]);
+
+    setTimeout(() => $messagesRef.current?.scrollIntoView({ behavior: 'smooth' }), 0);
 
     try {
       const response = await sendMessage(message);
@@ -29,20 +39,31 @@ function App() {
         )
       );
     }
+
+    if ($scrollRef.current) {
+      setTimeout(() => $messagesRef.current?.scrollIntoView({ behavior: 'smooth' }), 0);
+    }
+  }
+
+  function handleScroll() {
+    if (isInViewport($messagesRef.current!)) $scrollRef.current = true;
+    else $scrollRef.current = false;
   }
 
   return (
     <>
       {chatbot.isOpen && (
-        <div className="fixed shadow-sm bottom-[calc(4rem+1.5rem)] right-0 mr-4 bg-white p-6 rounded-lg border border-[#e5e7eb] w-[440px] h-[634px]">
+        <div className="fixed shadow-sm bottom-20 right-0 mr-4 bg-white rounded-lg w-[380px] h-[560px]">
           {/* Chatbot Header */}
-          <div className="flex flex-col space-y-1.5 pb-6">
-            <h2 className="font-semibold text-lg tracking-tight">Flolite Chatbot</h2>
-            <p className="text-sm text-[#6b7280] leading-3">Hello, how can I help you?</p>
+          <div className="flex rounded-tl rounded-tr p-2 bg-[#f36a40] flex-col space-y-1.5 pb-3">
+            <h2 className="font-semibold text-white text-lg tracking-tight">Flolite Assistant</h2>
+            <p className="text-xs text-white leading-3">Online</p>
           </div>
 
-          <ChatMessages messages={messages} />
-          <ChatInput onSend={handleSendMessage} isSending={isSending} />
+          <div className="h-[calc(560px-66px)] bg-[#f9fafb]">
+            <ChatMessages messages={messages} ref={$messagesRef} onScroll={handleScroll} />
+            <ChatInput onSend={handleSendMessage} isSending={isSending} />
+          </div>
         </div>
       )}
 

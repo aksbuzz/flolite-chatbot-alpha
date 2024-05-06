@@ -1,85 +1,26 @@
 import OpenAI from 'openai';
+import { dashboardTools } from './definitions/dashboard';
+import { feedbackTools } from './definitions/feedback';
+import { floliteTools } from './definitions/flolite';
+import { profileTools } from './definitions/profile';
+import { teamTools } from './definitions/team';
+import { walletTools } from './definitions/wallet';
 
 export const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+  ...dashboardTools,
+  ...feedbackTools,
+  ...floliteTools,
+  ...profileTools,
+  ...teamTools,
+  ...walletTools,
   {
     type: 'function',
     function: {
-      name: 'getCoinBalance',
-      description:
-        'Gets the current balance and lifetime earnings of the user. It also gets last 10 transactions.',
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'getAnnouncements',
-      description: 'Gets all published announcements within the organization.',
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'getUpcomingHolidays',
-      description: 'Gets upcoming holidays within the organization.',
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'getUpcomingBirthdays',
-      description: 'Gets upcoming birthdays within the organization.',
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'getUpcomingWorkAnniversaries',
-      description: 'Gets upcoming work anniversaries within the organization.',
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'getMyProfile',
-      description:
-        'Gets the user profile which includes information about user. Also gets user role.',
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'getLeaderboard',
-      description: 'Gets the leaderboard of users. By default type will be monthly.',
+      name: 'rejectRequest',
+      description: 'Use this function if the request is not possible.',
       parameters: {
         type: 'object',
-        properties: {
-          type: {
-            type: 'string',
-            enum: ['monthly', 'yearly', 'quarterly'],
-            default: 'monthly',
-          },
-        },
-        required: ['type'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'getCoinSystem',
-      description:
-        'Gets the coin system. It shows how much coin we can earn from different modules.',
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'submitAnonymousFeedback',
-      description: 'Submits anonymous feedback. Please prompt user to provide feedback data',
-      parameters: {
-        type: 'object',
-        properties: { feedback_data: { type: 'string' } },
-        required: ['feedback_data'],
+        properties: {},
       },
     },
   },
